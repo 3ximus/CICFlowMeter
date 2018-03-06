@@ -227,7 +227,7 @@ public class FlowOfflinePane extends JPanel{
         jPanel.add(Box.createHorizontalGlue());
         jPanel.add(btnOK);
         jPanel.add(Box.createHorizontalGlue());
-        btnOK.addActionListener(actionEvent -> startReadPcap());
+        btnOK.addActionListener(actionEvent -> startReadPcap("PLACEHOLDER", "PLACEHOLDER"));
 
         return jPanel;
     }
@@ -269,43 +269,26 @@ public class FlowOfflinePane extends JPanel{
         return ret;
     }
 
-    private void startReadPcap(){
-        File in;
-        int cmbInIndex = cmbInput.getSelectedIndex();
-        if (cmbInIndex < 0) {
-            in = new File((String) cmbInput.getEditor().getItem());
-        }else{
-            in = cmbInputEle.get(cmbInIndex);
-        }
+    public void startReadPcap(String inPcap, String outDir){
+        File in = new File(inPcap);
+        File out = new File(outDir);
 
-        File out;
-        int cmbOutIndex = cmbOutput.getSelectedIndex();
-        if (cmbOutIndex < 0) {
-            out = new File((String) cmbOutput.getEditor().getItem());
-        }else{
-            out = cmbOutputEle.get(cmbOutIndex);
-        }
+        System.out.println("You select: " + in.toString());
+        System.out.println("Out folder: " + out.toString());
+        System.out.println("-------------------------------");
 
-        updateOut("You select: " + in.toString());
-        updateOut("Out folder: " + out.toString());
-        updateOut("-------------------------------");
-
-        long flowTimeout;
-        long activityTimeout;
+        long flowTimeout = 120000000L;
+        long activityTimeout = 5000000L;
         try {
-            flowTimeout = getComboParameter(param1, param1Ele);
-            activityTimeout = getComboParameter(param2, param2Ele);
-
             ReadPcapFileWorker worker = new ReadPcapFileWorker(in, out.getPath(), flowTimeout, activityTimeout);
             worker.addPropertyChangeListener(evt -> {
                 ReadPcapFileWorker task = (ReadPcapFileWorker) evt.getSource();
                 if ("progress".equals(evt.getPropertyName())) {
-                    //logger.info("progress -> {}", evt.getNewValue());
                     List<String> chunks = (List<String>) evt.getNewValue();
                     if (chunks != null) {
                         SwingUtilities.invokeLater(() -> {
                             for (String str : chunks) {
-                                updateOut(str);
+                                System.out.println(str);
                             }
                         });
                     }
@@ -320,11 +303,11 @@ public class FlowOfflinePane extends JPanel{
             });
             worker.execute();
         } catch(ClassCastException e){
-            logger.info("startRead: {}",e.getMessage());
-            JOptionPane.showMessageDialog(FlowOfflinePane.this, "The parameter is not a number,please check and try again.", "Parameter error", JOptionPane.ERROR_MESSAGE);
+            System.out.println(e.getMessage());
+            System.out.println("The parameter is not a number,please check and try again.\nParameter error: " + JOptionPane.ERROR_MESSAGE);
         } catch(NumberFormatException e){
-            logger.info("startRead: {}",e.getMessage());
-            JOptionPane.showMessageDialog(FlowOfflinePane.this, "The parameter is not a number,please check and try again.", "Parameter error", JOptionPane.ERROR_MESSAGE);
+            System.out.println(e.getMessage());
+            System.out.println("The parameter is not a number,please check and try again.\nParameter error: " + JOptionPane.ERROR_MESSAGE);
         }
     }
 }

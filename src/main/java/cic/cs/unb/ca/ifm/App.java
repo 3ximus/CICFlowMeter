@@ -9,19 +9,21 @@ import cic.cs.unb.ca.flow.FlowMgr;
 import cic.cs.unb.ca.guava.GuavaMgr;
 import cic.cs.unb.ca.ifm.ui.MainFrame;
 
+import cic.cs.unb.ca.flow.ui.FlowOfflinePane;
+
+import java.lang.System;
+
 public class App {
-	
+
 	public static void init() {
 		FlowMgr.getInstance().init();
 		GuavaMgr.getInstance().init();
 	}
-	
+
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-	    
-	    
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			//UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
@@ -36,11 +38,14 @@ public class App {
 		} catch (UnsupportedLookAndFeelException e1) {
 			e1.printStackTrace();
 		}
-		
+
 		EventQueue.invokeLater(() -> {
             try {
                 init();
-                new MainFrame();
+				FlowOfflinePane op = new FlowOfflinePane();
+				op.startReadPcap(args[0], args[1]);
+
+                //new MainFrame();
             } catch (Exception e) {
                 e.printStackTrace();
             }

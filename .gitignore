@@ -36,13 +36,7 @@ target/
 pom.xml.*
 release.properties
 
-
-
-
-
-
-
-
 #back end folder
 bower_components/
 node_modules/
+

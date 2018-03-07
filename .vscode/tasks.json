@@ -4,13 +4,19 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "run",
+			"label": "run bigger",
 			"type": "shell",
-			"command": "./run.sh",
+			"command": "./run.sh /home/eximus/Documents/rep/cic-flowmeter/dist/bin/pcap/real/extensive_nmap.pcap",
 			"group": {
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"label": "run smaller",
+			"type": "shell",
+			"command": "./run.sh /home/eximus/Documents/rep/cic-flowmeter/dist/bin/pcap/real/nmap.pcap",
+			"problemMatcher": []
 		}
 	]
 }

@@ -27,10 +27,10 @@ public class PacketReader {
 	private static final Logger logger = LoggerFactory.getLogger(PacketReader.class);
 	private IdGenerator  generator = new IdGenerator();
 	private Pcap pcapReader;
-	
+
 	private long firstPacket;
 	private long lastPacket;
-	
+
 	private Tcp  tcp;
 	private Udp  udp;
 	private Ip4  ipv4;
@@ -38,28 +38,28 @@ public class PacketReader {
 	private L2TP l2tp;
 	private PcapHeader hdr;
 	private JBuffer buf;
-	
+
 	private boolean readIP6;
 	private boolean readIP4;
-	
+
 	public PacketReader(String filename) {
-		super();	
+		super();
 		this.readIP4 = true;
-		this.readIP6 = false;		
+		this.readIP6 = false;
 		this.config(filename);
 	}
-	
+
 	public PacketReader(String filename, boolean readip4, boolean readip6) {
-		super();	
+		super();
 		this.readIP4 = readip4;
 		this.readIP6 = readip6;
 		this.config(filename);
-	}	
-	
+	}
+
 	private void config(String filename){
 		StringBuilder errbuf = new StringBuilder(); // For any error msgs
 		pcapReader = Pcap.openOffline(filename, errbuf);
-		
+
 		this.firstPacket = 0L;
 		this.lastPacket = 0L;
 
@@ -73,33 +73,33 @@ public class PacketReader {
 			this.ipv6 = new Ip6();
 			this.l2tp = new L2TP();
 			hdr = new PcapHeader(JMemory.POINTER);
-			buf = new JBuffer(JMemory.POINTER);		
-		}		
+			buf = new JBuffer(JMemory.POINTER);
+		}
 	}
-	
+
 	public BasicPacketInfo nextPacket(){
 		 PcapPacket      packet;
 		 BasicPacketInfo packetInfo = null;
 		 try{
 			 if(pcapReader.nextEx(hdr,buf) == Pcap.NEXT_EX_OK){
 				 packet = new PcapPacket(hdr, buf);
-				 packet.scan(Ethernet.ID);				 
-				 
-				 if(this.readIP4){					 
+				 packet.scan(Ethernet.ID);
+
+				 if(this.readIP4){
 					 packetInfo = getIpv4Info(packet);
 					 if (packetInfo == null && this.readIP6){
-					 	packetInfo = getIpv6Info(packet);				 	
-					 }					 
+					 	packetInfo = getIpv6Info(packet);
+					 }
 				 }else if(this.readIP6){
 					 packetInfo = getIpv6Info(packet);
 					 if (packetInfo == null && this.readIP4){
 					 	packetInfo = getIpv4Info(packet);
 					 }
 				 }
-				 
+
 				 if (packetInfo == null){
 					 packetInfo = getVPNInfo(packet);
-				 }					 
+				 }
 
 			 }else{
 				 throw new PcapClosedException();
@@ -112,18 +112,18 @@ public class PacketReader {
 		 }
 		 return packetInfo;
 	}
-	
+
 	private BasicPacketInfo getIpv4Info(PcapPacket packet){
-		BasicPacketInfo packetInfo = null;		
+		BasicPacketInfo packetInfo = null;
 		try {
-						
+
 			if (packet.hasHeader(ipv4)){
 				packetInfo = new BasicPacketInfo(this.generator);
 				packetInfo.setSrc(this.ipv4.source());
 				packetInfo.setDst(this.ipv4.destination());
 				//packetInfo.setTimeStamp(packet.getCaptureHeader().timestampInMillis());
 				packetInfo.setTimeStamp(packet.getCaptureHeader().timestampInMicros());
-				
+
 				if(this.firstPacket == 0L)
 					this.firstPacket = packet.getCaptureHeader().timestampInMillis();
 				this.lastPacket = packet.getCaptureHeader().timestampInMillis();
@@ -148,7 +148,7 @@ public class PacketReader {
 					packetInfo.setDstPort(udp.destination());
 					packetInfo.setPayloadBytes(udp.getPayloadLength());
 					packetInfo.setHeaderBytes(udp.getHeaderLength());
-					packetInfo.setProtocol(17);			
+					packetInfo.setProtocol(17);
 				}else {
 					/*logger.debug("other packet Ethernet -> {}"+  packet.hasHeader(new Ethernet()));
 					logger.debug("other packet Html     -> {}"+  packet.hasHeader(new Html()));
@@ -174,16 +174,16 @@ public class PacketReader {
 			//errormsg+=packet.getHeader(new Ip4())+"\n";
 			errormsg+="********************************************************************************"+"\n";
 			errormsg+=packet.toHexdump()+"\n";
-			
+
 			//System.out.println(errormsg);
 			logger.error(errormsg);
 			//System.exit(-1);
 			return null;
 		}
-		
+
 		return packetInfo;
 	}
-	
+
 	private BasicPacketInfo getIpv6Info(PcapPacket packet){
 		BasicPacketInfo packetInfo = null;
 		try{
@@ -191,9 +191,9 @@ public class PacketReader {
 				packetInfo = new BasicPacketInfo(this.generator);
 				packetInfo.setSrc(this.ipv6.source());
 				packetInfo.setDst(this.ipv6.destination());
-				packetInfo.setTimeStamp(packet.getCaptureHeader().timestampInMillis());			
-				
-				if(packet.hasHeader(this.tcp)){						
+				packetInfo.setTimeStamp(packet.getCaptureHeader().timestampInMillis());
+
+				if(packet.hasHeader(this.tcp)){
 					packetInfo.setSrcPort(tcp.source());
 					packetInfo.setDstPort(tcp.destination());
 					packetInfo.setPayloadBytes(tcp.getPayloadLength());
@@ -204,8 +204,8 @@ public class PacketReader {
 					packetInfo.setDstPort(udp.destination());
 					packetInfo.setPayloadBytes(udp.getPayloadLength());
 					packetInfo.setHeaderBytes(tcp.getHeaderLength());
-					packetInfo.setProtocol(17);								
-				}		
+					packetInfo.setProtocol(17);
+				}
 			}
 		}catch(Exception e){
 			e.printStackTrace();
@@ -215,29 +215,29 @@ public class PacketReader {
 			//errormsg+=packet.getHeader(new Ip6())+"\n";
 			errormsg+="********************************************************************************"+"\n";
 			errormsg+=packet.toHexdump()+"\n";
-			
+
 		//	System.out.println(errormsg);
 			logger.error(errormsg);
 			//System.exit(-1);
-			return null;			
+			return null;
 		}
-				
+
 		return packetInfo;
 	}
-	
-	private BasicPacketInfo getVPNInfo(PcapPacket packet){		
-		BasicPacketInfo packetInfo = null;		
+
+	private BasicPacketInfo getVPNInfo(PcapPacket packet){
+		BasicPacketInfo packetInfo = null;
 		try {
 			packet.scan(L2TP.ID);
-			
-			if (packet.hasHeader(l2tp)){				
-		    	if(this.readIP4){		
+
+			if (packet.hasHeader(l2tp)){
+		    	if(this.readIP4){
 		    		packet.scan(ipv4.getId());
 		    		packetInfo = getIpv4Info(packet);
 		    		if (packetInfo == null && this.readIP6){
 		    			packet.scan(ipv6.getId());
-		    			packetInfo = getIpv6Info(packet);				 	
-		    		}					 
+		    			packetInfo = getIpv6Info(packet);
+		    		}
 		    	}else if(this.readIP6){
 		    		packet.scan(ipv6.getId());
 		    		packetInfo = getIpv6Info(packet);
@@ -245,7 +245,7 @@ public class PacketReader {
 		    			packet.scan(ipv4.getId());
 		    			packetInfo = getIpv4Info(packet);
 		    		}
-		    	}				
+		    	}
 
 			}
 		} catch (Exception e) {
@@ -256,15 +256,15 @@ public class PacketReader {
 			//errormsg+=packet.getHeader(new L2TP())+"\n";
 			errormsg+="********************************************************************************"+"\n";
 			errormsg+=packet.toHexdump()+"\n";
-			
+
 			//System.out.println(errormsg);
 			logger.error(errormsg);
 			//System.exit(-1);
 			return null;
 		}
-		
+
 		return packetInfo;
-	}	
+	}
 
 	public long getFirstPacket() {
 		return firstPacket;
@@ -280,7 +280,7 @@ public class PacketReader {
 
 	public void setLastPacket(long lastPacket) {
 		this.lastPacket = lastPacket;
-	}	
+	}
 
 	/*
 	 * So far,The value of the field BasicPacketInfo.id is not used
@@ -289,42 +289,42 @@ public class PacketReader {
 	private static IdGenerator idGen = new IdGenerator();
 	public static BasicPacketInfo getBasicPacketInfo(PcapPacket packet,boolean readIP4, boolean readIP6) {
 		BasicPacketInfo packetInfo = null;
-		
-		
+
+
 		Protocol protocol = new Protocol();
-		
-		if(readIP4){					 
+
+		if(readIP4){
 			packetInfo = getIpv4Info(packet,protocol);
 			if (packetInfo == null && readIP6){
-				packetInfo = getIpv6Info(packet,protocol);				 	
-			}					 
+				packetInfo = getIpv6Info(packet,protocol);
+			}
 		}else if(readIP6){
 			packetInfo = getIpv6Info(packet,protocol);
 			if (packetInfo == null && readIP4){
 				packetInfo = getIpv4Info(packet,protocol);
 			}
 		}
-		
+
 		if (packetInfo == null){
 			packetInfo = getVPNInfo(packet,protocol,readIP4,readIP6);
 		}
-		
+
 		return packetInfo;
 	}
 
-	private static BasicPacketInfo getVPNInfo(PcapPacket packet,Protocol protocol,boolean readIP4, boolean readIP6) {		
+	private static BasicPacketInfo getVPNInfo(PcapPacket packet,Protocol protocol,boolean readIP4, boolean readIP6) {
 		BasicPacketInfo packetInfo = null;
 		try {
 			packet.scan(L2TP.ID);
-			
-			if (packet.hasHeader(protocol.l2tp)){				
-		    	if(readIP4){		
+
+			if (packet.hasHeader(protocol.l2tp)){
+		    	if(readIP4){
 		    		packet.scan(protocol.ipv4.getId());
 		    		packetInfo = getIpv4Info(packet,protocol);
 		    		if (packetInfo == null && readIP6){
 		    			packet.scan(protocol.ipv6.getId());
-		    			packetInfo = getIpv6Info(packet,protocol);				 	
-		    		}					 
+		    			packetInfo = getIpv6Info(packet,protocol);
+		    		}
 		    	}else if(readIP6){
 		    		packet.scan(protocol.ipv6.getId());
 		    		packetInfo = getIpv6Info(packet,protocol);
@@ -332,13 +332,13 @@ public class PacketReader {
 		    			packet.scan(protocol.ipv4.getId());
 		    			packetInfo = getIpv4Info(packet,protocol);
 		    		}
-		    	}				
+		    	}
 
 			}
 		} catch (Exception e) {
 			/*
 			 * BufferUnderflowException while decoding header
-			 * havn't fixed, so do not e.printStackTrace() 
+			 * havn't fixed, so do not e.printStackTrace()
 			 */
 			//e.printStackTrace();
 			/*packet.scan(protocol.l2tp.getId());
@@ -350,7 +350,7 @@ public class PacketReader {
 			logger.error(errormsg);*/
 			return null;
 		}
-		
+
 		return packetInfo;
 	}
 
@@ -361,9 +361,9 @@ public class PacketReader {
 				packetInfo = new BasicPacketInfo(idGen);
 				packetInfo.setSrc(protocol.ipv6.source());
 				packetInfo.setDst(protocol.ipv6.destination());
-				packetInfo.setTimeStamp(packet.getCaptureHeader().timestampInMillis());			
-				
-				if(packet.hasHeader(protocol.tcp)){						
+				packetInfo.setTimeStamp(packet.getCaptureHeader().timestampInMillis());
+
+				if(packet.hasHeader(protocol.tcp)){
 					packetInfo.setSrcPort(protocol.tcp.source());
 					packetInfo.setDstPort(protocol.tcp.destination());
 					packetInfo.setPayloadBytes(protocol.tcp.getPayloadLength());
@@ -374,8 +374,8 @@ public class PacketReader {
 					packetInfo.setDstPort(protocol.udp.destination());
 					packetInfo.setPayloadBytes(protocol.udp.getPayloadLength());
 					packetInfo.setHeaderBytes(protocol.tcp.getHeaderLength());
-					packetInfo.setProtocol(17);								
-				}		
+					packetInfo.setProtocol(17);
+				}
 			}
 		}catch(Exception e){
 			/*
@@ -391,23 +391,23 @@ public class PacketReader {
 			errormsg+=packet.toHexdump()+"\n";
 			logger.error(errormsg);
 			//System.exit(-1);*/
-			return null;			
+			return null;
 		}
-				
+
 		return packetInfo;
 	}
 
 	private static BasicPacketInfo getIpv4Info(PcapPacket packet,Protocol protocol) {
-		BasicPacketInfo packetInfo = null;		
+		BasicPacketInfo packetInfo = null;
 		try {
-						
+
 			if (packet.hasHeader(protocol.ipv4)){
 				packetInfo = new BasicPacketInfo(idGen);
 				packetInfo.setSrc(protocol.ipv4.source());
 				packetInfo.setDst(protocol.ipv4.destination());
 				//packetInfo.setTimeStamp(packet.getCaptureHeader().timestampInMillis());
 				packetInfo.setTimeStamp(packet.getCaptureHeader().timestampInMicros());
-				
+
 				/*if(this.firstPacket == 0L)
 					this.firstPacket = packet.getCaptureHeader().timestampInMillis();
 				this.lastPacket = packet.getCaptureHeader().timestampInMillis();*/
@@ -432,7 +432,7 @@ public class PacketReader {
 					packetInfo.setDstPort(protocol.udp.destination());
 					packetInfo.setPayloadBytes(protocol.udp.getPayloadLength());
 					packetInfo.setHeaderBytes(protocol.udp.getHeaderLength());
-					packetInfo.setProtocol(17);			
+					packetInfo.setProtocol(17);
 				} else {
 					int headerCount = packet.getHeaderCount();
 					for(int i=0;i<headerCount;i++) {
@@ -457,7 +457,7 @@ public class PacketReader {
 			logger.error(errormsg);
 			return null;*/
 		}
-		
+
 		return packetInfo;
 	}
 }

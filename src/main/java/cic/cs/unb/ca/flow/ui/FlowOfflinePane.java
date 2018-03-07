@@ -1,8 +1,6 @@
 package cic.cs.unb.ca.flow.ui;
 
 import cic.cs.unb.ca.jnetpcap.worker.ReadPcapFileWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import swing.common.TextFileFilter;
 
 import javax.swing.*;
@@ -14,7 +12,6 @@ import java.util.List;
 import java.util.Vector;
 
 public class FlowOfflinePane extends JPanel{
-    protected static final Logger logger = LoggerFactory.getLogger(FlowOfflinePane.class);
     private static final Border PADDING = BorderFactory.createEmptyBorder(10,5,10,5);
     private JFileChooser fileChooser;
     private TextFileFilter pcapChooserFilter;
@@ -108,7 +105,6 @@ public class FlowOfflinePane extends JPanel{
             int action = fileChooser.showOpenDialog(FlowOfflinePane.this);
             if (action == JFileChooser.APPROVE_OPTION) {
                 File inputFile = fileChooser.getSelectedFile();
-                logger.debug("offline select input {}", inputFile.getPath());
                 setComboBox(cmbInput, cmbInputEle, inputFile);
             }
         });
@@ -124,7 +120,6 @@ public class FlowOfflinePane extends JPanel{
             int action = fileChooser.showOpenDialog(FlowOfflinePane.this);
             if (action == JFileChooser.APPROVE_OPTION) {
                 File outputFile = fileChooser.getSelectedFile();
-                logger.debug("offline select output {}", outputFile.getPath());
                 setComboBox(cmbOutput, cmbOutputEle, outputFile);
             }
         });
@@ -281,27 +276,25 @@ public class FlowOfflinePane extends JPanel{
         long activityTimeout = 5000000L;
         try {
             ReadPcapFileWorker worker = new ReadPcapFileWorker(in, out.getPath(), flowTimeout, activityTimeout);
-            worker.addPropertyChangeListener(evt -> {
-                ReadPcapFileWorker task = (ReadPcapFileWorker) evt.getSource();
-                if ("progress".equals(evt.getPropertyName())) {
-                    List<String> chunks = (List<String>) evt.getNewValue();
-                    if (chunks != null) {
-                        SwingUtilities.invokeLater(() -> {
-                            for (String str : chunks) {
-                                System.out.println(str);
-                            }
-                        });
-                    }
-                } else if ("state".equals(evt.getPropertyName())) {
-                    switch (task.getState()) {
-                        case STARTED:
-                            break;
-                        case DONE:
-                            break;
-                    }
-                }
-            });
-            worker.execute();
+            worker.readPcapFile(in.getPath(), out.getPath());
+            // worker.addPropertyChangeListener(evt -> {
+            //     ReadPcapFileWorker task = (ReadPcapFileWorker) evt.getSource();
+            //     if ("progress".equals(evt.getPropertyName())) {
+            //         List<String> chunks = (List<String>) evt.getNewValue();
+            //         if (chunks != null) {
+            //             SwingUtilities.invokeLater(() -> {
+            //             });
+            //         }
+            //     } else if ("state".equals(evt.getPropertyName())) {
+            //         switch (task.getState()) {
+            //             case STARTED:
+            //                 break;
+            //             case DONE:
+            //                 break;
+            //         }
+            //     }
+            // });
+            // worker.execute();
         } catch(ClassCastException e){
             System.out.println(e.getMessage());
             System.out.println("The parameter is not a number,please check and try again.\nParameter error: " + JOptionPane.ERROR_MESSAGE);

@@ -101,7 +101,7 @@ public class ReadPcapFileWorker extends SwingWorker<List<String>,String>{
         firePropertyChange("progress","",chunks);
     }
 
-    private void readPcapDir(File inputPath, String outPath) {
+    public void readPcapDir(File inputPath, String outPath) {
         if(inputPath==null||outPath==null) {
             return;
         }
@@ -113,6 +113,7 @@ public class ReadPcapFileWorker extends SwingWorker<List<String>,String>{
         publish("");
 
         for(File file:pcapFiles) {
+            System.out.println(file.getPath());
             readPcapFile(file.getPath(),outPath);
         }
     }

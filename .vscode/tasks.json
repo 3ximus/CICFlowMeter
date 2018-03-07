@@ -6,7 +6,7 @@
 		{
 			"label": "run bigger",
 			"type": "shell",
-			"command": "./run.sh /home/eximus/Documents/rep/cic-flowmeter/dist/bin/pcap/real/extensive_nmap.pcap",
+			"command": "./run.sh /home/eximus/Documents/rep/cic-flowmeter/dist/bin/pcap/real/dos-hulk-1min.pcap",
 			"group": {
 				"kind": "build",
 				"isDefault": true

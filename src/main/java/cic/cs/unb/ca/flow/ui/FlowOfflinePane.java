@@ -276,7 +276,11 @@ public class FlowOfflinePane extends JPanel{
         long activityTimeout = 5000000L;
         try {
             ReadPcapFileWorker worker = new ReadPcapFileWorker(in, out.getPath(), flowTimeout, activityTimeout);
-            worker.readPcapFile(in.getPath(), out.getPath());
+            if (in.isDirectory()) {
+                worker.readPcapDir(in,out.getPath());
+            } else {
+                worker.readPcapFile(in.getPath(), out.getPath());
+            }
             // worker.addPropertyChangeListener(evt -> {
             //     ReadPcapFileWorker task = (ReadPcapFileWorker) evt.getSource();
             //     if ("progress".equals(evt.getPropertyName())) {

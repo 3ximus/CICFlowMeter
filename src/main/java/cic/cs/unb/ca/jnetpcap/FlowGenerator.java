@@ -44,20 +44,20 @@ public class FlowGenerator {
 	private long    flowTimeOut;
 	private long    flowActivityTimeOut;
 	private int     finishedFlowCount;
-	
+
 	public FlowGenerator(boolean bidirectional, long flowTimeout, long activityTimeout) {
 		super();
 		this.bidirectional = bidirectional;
 		this.flowTimeOut = flowTimeout;
-		this.flowActivityTimeOut = activityTimeout; 
+		this.flowActivityTimeOut = activityTimeout;
 		init();
-	}		
-	
+	}
+
 	private void init(){
 		currentFlows = new HashMap<>();
 		finishedFlows = new HashMap<>();
 		IPAddresses = new HashMap<>();
-		finishedFlowCount = 0;		
+		finishedFlowCount = 0;
 	}
 
 	public void addFlowListener(FlowGenListener listener) {
@@ -68,13 +68,13 @@ public class FlowGenerator {
         if(packet == null) {
             return;
         }
-        
+
     	BasicFlow   flow;
     	long        currentTimestamp = packet.getTimeStamp();
 
     	if(this.currentFlows.containsKey(packet.getFlowId())){
     		flow = currentFlows.get(packet.getFlowId());
-    		// Flow finished due flowtimeout: 
+    		// Flow finished due flowtimeout:
     		// 1.- we move the flow to finished flow list
     		// 2.- we eliminate the flow from the current flow list
     		// 3.- we create a new flow with the packet-in-process
@@ -87,18 +87,18 @@ public class FlowGenerator {
                     }
                     //flow.endActiveIdleTime(currentTimestamp,this.flowActivityTimeOut, this.flowTimeOut, false);
     			}
-    			currentFlows.remove(packet.getFlowId());    			
+    			currentFlows.remove(packet.getFlowId());
     			currentFlows.put(packet.getFlowId(), new BasicFlow(bidirectional,packet,flow.getSrc(),flow.getDst(),flow.getSrcPort(),flow.getDstPort()));
-    			
+
     			int cfsize = currentFlows.size();
     			if(cfsize%50==0) {
     				logger.debug("Timeout current has {} flow",cfsize);
     	    	}
-    			
+
         	// Flow finished due FIN flag (tcp only):
     		// 1.- we add the packet-in-process to the flow (it is the last packet)
         	// 2.- we move the flow to finished flow list
-        	// 3.- we eliminate the flow from the current flow list   	
+        	// 3.- we eliminate the flow from the current flow list
     		}else if(packet.hasFlagFIN()){
     	    	logger.debug("FlagFIN current has {} flow",currentFlows.size());
     	    	flow.addPacket(packet);
@@ -114,7 +114,7 @@ public class FlowGenerator {
     			currentFlows.put(packet.getFlowId(), flow);
     		}
     	}else{
-    		currentFlows.put(packet.getFlowId(), new BasicFlow(bidirectional,packet)); 		
+    		currentFlows.put(packet.getFlowId(), new BasicFlow(bidirectional,packet));
     	}
     }
 
@@ -122,24 +122,24 @@ public class FlowGenerator {
     	BasicFlow   flow;
     	try {
     		System.out.println("TOTAL Flows: "+(finishedFlows.size()+currentFlows.size()));
-    		FileOutputStream output = new FileOutputStream(new File(path+filename));    
-    		
+    		FileOutputStream output = new FileOutputStream(new File(path+filename));
+
     		output.write((header+"\n").getBytes());
-    		Set<Integer> fkeys = finishedFlows.keySet();    		
+    		Set<Integer> fkeys = finishedFlows.keySet();
 			for(Integer key:fkeys){
 	    		flow = finishedFlows.get(key);
-	    		if(flow.packetCount()>1)				
+	    		if(flow.packetCount()>1)
 	    			output.write((flow.dumpFlowBasedFeaturesEx()+"\n").getBytes());
 			}
-			Set<String> ckeys = currentFlows.keySet();   		
+			Set<String> ckeys = currentFlows.keySet();
 			for(String key:ckeys){
 	    		flow = currentFlows.get(key);
-	    		if(flow.packetCount()>1)				
+	    		if(flow.packetCount()>1)
 	    			output.write((flow.dumpFlowBasedFeaturesEx()+"\n").getBytes());
-			}			
-			
+			}
+
 			output.flush();
-			output.close();			
+			output.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -154,10 +154,10 @@ public class FlowGenerator {
     	try {
     		//total = finishedFlows.size()+currentFlows.size(); becasue there are 0 packet BasicFlow in the currentFlows
 
-    		FileOutputStream output = new FileOutputStream(new File(path+filename));
-    		
+    		FileOutputStream output = new FileOutputStream(new File(path+'/'+filename));
+
     		output.write((header+"\n").getBytes());
-    		Set<Integer> fkeys = finishedFlows.keySet();    		
+    		Set<Integer> fkeys = finishedFlows.keySet();
 			for(Integer key:fkeys){
 	    		flow = finishedFlows.get(key);
                 if (flow.packetCount() > 1) {
@@ -188,8 +188,8 @@ public class FlowGenerator {
         }
 
         return total;
-    }       
-    
+    }
+
     private int getFlowCount(){
     	this.finishedFlowCount++;
     	return this.finishedFlowCount;
